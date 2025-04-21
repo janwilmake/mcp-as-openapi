@@ -1,0 +1,7 @@
+name = "mcp-as-openapi"
+compatibility_date = "2024-12-05"
+assets = { directory= "./" }
+dev.port = 3000
+routes = [
+  { pattern = "mcp-as-openapi.wilmake.com", custom_domain = true },
+]

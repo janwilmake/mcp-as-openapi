@@ -1,0 +1,2177 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Model Context Protocol API",
+    "description": "OpenAPI specification for the Model Context Protocol (MCP)",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/initialize": {
+      "post": {
+        "operationId": "initialize",
+        "summary": "Initialize the connection between client and server",
+        "description": "This request is sent from the client to the server when it first connects, asking it to begin initialization.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["method", "params"],
+                "properties": {
+                  "method": {
+                    "type": "string",
+                    "const": "initialize"
+                  },
+                  "params": {
+                    "type": "object",
+                    "required": [
+                      "capabilities",
+                      "clientInfo",
+                      "protocolVersion"
+                    ],
+                    "properties": {
+                      "capabilities": {
+                        "type": "object",
+                        "description": "Capabilities a client may support",
+                        "properties": {
+                          "experimental": {
+                            "type": "object",
+                            "description": "Experimental, non-standard capabilities that the client supports",
+                            "additionalProperties": {
+                              "type": "object",
+                              "additionalProperties": true
+                            }
+                          },
+                          "roots": {
+                            "type": "object",
+                            "description": "Present if the client supports listing roots",
+                            "properties": {
+                              "listChanged": {
+                                "type": "boolean",
+                                "description": "Whether the client supports notifications for changes to the roots list"
+                              }
+                            }
+                          },
+                          "sampling": {
+                            "type": "object",
+                            "description": "Present if the client supports sampling from an LLM",
+                            "additionalProperties": true
+                          }
+                        }
+                      },
+                      "clientInfo": {
+                        "type": "object",
+                        "description": "Describes the name and version of an MCP implementation",
+                        "required": ["name", "version"],
+                        "properties": {
+                          "name": {
+                            "type": "string"
+                          },
+                          "version": {
+                            "type": "string"
+                          }
+                        }
+                      },
+                      "protocolVersion": {
+                        "type": "string",
+                        "description": "The latest version of the Model Context Protocol that the client supports"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful initialization response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["capabilities", "protocolVersion", "serverInfo"],
+                  "properties": {
+                    "_meta": {
+                      "type": "object",
+                      "additionalProperties": true,
+                      "description": "Reserved for additional metadata"
+                    },
+                    "capabilities": {
+                      "type": "object",
+                      "description": "Capabilities that a server may support",
+                      "properties": {
+                        "completions": {
+                          "type": "object",
+                          "description": "Present if the server supports argument autocompletion suggestions",
+                          "additionalProperties": true
+                        },
+                        "experimental": {
+                          "type": "object",
+                          "description": "Experimental, non-standard capabilities that the server supports",
+                          "additionalProperties": {
+                            "type": "object",
+                            "additionalProperties": true
+                          }
+                        },
+                        "logging": {
+                          "type": "object",
+                          "description": "Present if the server supports sending log messages to the client",
+                          "additionalProperties": true
+                        },
+                        "prompts": {
+                          "type": "object",
+                          "description": "Present if the server offers any prompt templates",
+                          "properties": {
+                            "listChanged": {
+                              "type": "boolean",
+                              "description": "Whether this server supports notifications for changes to the prompt list"
+                            }
+                          }
+                        },
+                        "resources": {
+                          "type": "object",
+                          "description": "Present if the server offers any resources to read",
+                          "properties": {
+                            "listChanged": {
+                              "type": "boolean",
+                              "description": "Whether this server supports notifications for changes to the resource list"
+                            },
+                            "subscribe": {
+                              "type": "boolean",
+                              "description": "Whether this server supports subscribing to resource updates"
+                            }
+                          }
+                        },
+                        "tools": {
+                          "type": "object",
+                          "description": "Present if the server offers any tools to call",
+                          "properties": {
+                            "listChanged": {
+                              "type": "boolean",
+                              "description": "Whether this server supports notifications for changes to the tool list"
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "instructions": {
+                      "type": "string",
+                      "description": "Instructions describing how to use the server and its features"
+                    },
+                    "protocolVersion": {
+                      "type": "string",
+                      "description": "The version of the Model Context Protocol that the server wants to use"
+                    },
+                    "serverInfo": {
+                      "type": "object",
+                      "description": "Describes the name and version of the server implementation",
+                      "required": ["name", "version"],
+                      "properties": {
+                        "name": {
+                          "type": "string"
+                        },
+                        "version": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/ping": {
+      "post": {
+        "operationId": "ping",
+        "summary": "Check if the other party is still alive",
+        "description": "A ping, issued by either the server or the client, to check that the other party is still alive",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["method"],
+                "properties": {
+                  "method": {
+                    "type": "string",
+                    "const": "ping"
+                  },
+                  "params": {
+                    "type": "object",
+                    "properties": {
+                      "_meta": {
+                        "type": "object",
+                        "properties": {
+                          "progressToken": {
+                            "type": ["string", "integer"],
+                            "description": "Token for requesting progress notifications"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Empty response indicating the ping was received",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "_meta": {
+                      "type": "object",
+                      "additionalProperties": true
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/resources/list": {
+      "post": {
+        "operationId": "listResources",
+        "summary": "List resources the server has",
+        "description": "Sent from the client to request a list of resources the server has",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["method"],
+                "properties": {
+                  "method": {
+                    "type": "string",
+                    "const": "resources/list"
+                  },
+                  "params": {
+                    "type": "object",
+                    "properties": {
+                      "cursor": {
+                        "type": "string",
+                        "description": "An opaque token representing the current pagination position"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "List of resources",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["resources"],
+                  "properties": {
+                    "_meta": {
+                      "type": "object",
+                      "additionalProperties": true
+                    },
+                    "nextCursor": {
+                      "type": "string",
+                      "description": "An opaque token representing the pagination position after the last returned result"
+                    },
+                    "resources": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": ["name", "uri"],
+                        "properties": {
+                          "annotations": {
+                            "type": "object",
+                            "description": "Optional annotations for the client",
+                            "properties": {
+                              "audience": {
+                                "type": "array",
+                                "description": "Describes who the intended customer of this object or data is",
+                                "items": {
+                                  "type": "string",
+                                  "enum": ["assistant", "user"]
+                                }
+                              },
+                              "priority": {
+                                "type": "number",
+                                "minimum": 0,
+                                "maximum": 1,
+                                "description": "Describes how important this data is for operating the server"
+                              }
+                            }
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "A description of what this resource represents"
+                          },
+                          "mimeType": {
+                            "type": "string",
+                            "description": "The MIME type of this resource, if known"
+                          },
+                          "name": {
+                            "type": "string",
+                            "description": "A human-readable name for this resource"
+                          },
+                          "size": {
+                            "type": "integer",
+                            "description": "The size of the raw resource content, in bytes"
+                          },
+                          "uri": {
+                            "type": "string",
+                            "format": "uri",
+                            "description": "The URI of this resource"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/resources/read": {
+      "post": {
+        "operationId": "readResource",
+        "summary": "Read a specific resource",
+        "description": "Sent from the client to the server, to read a specific resource URI",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["method", "params"],
+                "properties": {
+                  "method": {
+                    "type": "string",
+                    "const": "resources/read"
+                  },
+                  "params": {
+                    "type": "object",
+                    "required": ["uri"],
+                    "properties": {
+                      "uri": {
+                        "type": "string",
+                        "format": "uri",
+                        "description": "The URI of the resource to read"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Resource contents",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["contents"],
+                  "properties": {
+                    "_meta": {
+                      "type": "object",
+                      "additionalProperties": true
+                    },
+                    "contents": {
+                      "type": "array",
+                      "items": {
+                        "oneOf": [
+                          {
+                            "type": "object",
+                            "required": ["text", "uri"],
+                            "properties": {
+                              "mimeType": {
+                                "type": "string",
+                                "description": "The MIME type of this resource"
+                              },
+                              "text": {
+                                "type": "string",
+                                "description": "The text of the item"
+                              },
+                              "uri": {
+                                "type": "string",
+                                "format": "uri",
+                                "description": "The URI of this resource"
+                              }
+                            }
+                          },
+                          {
+                            "type": "object",
+                            "required": ["blob", "uri"],
+                            "properties": {
+                              "blob": {
+                                "type": "string",
+                                "format": "byte",
+                                "description": "Base64-encoded binary data"
+                              },
+                              "mimeType": {
+                                "type": "string",
+                                "description": "The MIME type of this resource"
+                              },
+                              "uri": {
+                                "type": "string",
+                                "format": "uri",
+                                "description": "The URI of this resource"
+                              }
+                            }
+                          }
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/resources/subscribe": {
+      "post": {
+        "operationId": "subscribeToResource",
+        "summary": "Subscribe to resource updates",
+        "description": "Sent from the client to request resources/updated notifications from the server",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["method", "params"],
+                "properties": {
+                  "method": {
+                    "type": "string",
+                    "const": "resources/subscribe"
+                  },
+                  "params": {
+                    "type": "object",
+                    "required": ["uri"],
+                    "properties": {
+                      "uri": {
+                        "type": "string",
+                        "format": "uri",
+                        "description": "The URI of the resource to subscribe to"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Empty response indicating successful subscription",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "_meta": {
+                      "type": "object",
+                      "additionalProperties": true
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/resources/unsubscribe": {
+      "post": {
+        "operationId": "unsubscribeFromResource",
+        "summary": "Unsubscribe from resource updates",
+        "description": "Sent from the client to request cancellation of resources/updated notifications",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["method", "params"],
+                "properties": {
+                  "method": {
+                    "type": "string",
+                    "const": "resources/unsubscribe"
+                  },
+                  "params": {
+                    "type": "object",
+                    "required": ["uri"],
+                    "properties": {
+                      "uri": {
+                        "type": "string",
+                        "format": "uri",
+                        "description": "The URI of the resource to unsubscribe from"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Empty response indicating successful unsubscription",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "_meta": {
+                      "type": "object",
+                      "additionalProperties": true
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/prompts/list": {
+      "post": {
+        "operationId": "listPrompts",
+        "summary": "List prompts the server has",
+        "description": "Sent from the client to request a list of prompts and prompt templates the server has",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["method"],
+                "properties": {
+                  "method": {
+                    "type": "string",
+                    "const": "prompts/list"
+                  },
+                  "params": {
+                    "type": "object",
+                    "properties": {
+                      "cursor": {
+                        "type": "string",
+                        "description": "An opaque token representing the current pagination position"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "List of prompts",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["prompts"],
+                  "properties": {
+                    "_meta": {
+                      "type": "object",
+                      "additionalProperties": true
+                    },
+                    "nextCursor": {
+                      "type": "string",
+                      "description": "An opaque token representing the pagination position after the last returned result"
+                    },
+                    "prompts": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": ["name"],
+                        "properties": {
+                          "arguments": {
+                            "type": "array",
+                            "description": "A list of arguments to use for templating the prompt",
+                            "items": {
+                              "type": "object",
+                              "required": ["name"],
+                              "properties": {
+                                "description": {
+                                  "type": "string",
+                                  "description": "A human-readable description of the argument"
+                                },
+                                "name": {
+                                  "type": "string",
+                                  "description": "The name of the argument"
+                                },
+                                "required": {
+                                  "type": "boolean",
+                                  "description": "Whether this argument must be provided"
+                                }
+                              }
+                            }
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "An optional description of what this prompt provides"
+                          },
+                          "name": {
+                            "type": "string",
+                            "description": "The name of the prompt or prompt template"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/prompts/get": {
+      "post": {
+        "operationId": "getPrompt",
+        "summary": "Get a specific prompt",
+        "description": "Used by the client to get a prompt provided by the server",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["method", "params"],
+                "properties": {
+                  "method": {
+                    "type": "string",
+                    "const": "prompts/get"
+                  },
+                  "params": {
+                    "type": "object",
+                    "required": ["name"],
+                    "properties": {
+                      "arguments": {
+                        "type": "object",
+                        "description": "Arguments to use for templating the prompt",
+                        "additionalProperties": {
+                          "type": "string"
+                        }
+                      },
+                      "name": {
+                        "type": "string",
+                        "description": "The name of the prompt or prompt template"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Prompt content",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["messages"],
+                  "properties": {
+                    "_meta": {
+                      "type": "object",
+                      "additionalProperties": true
+                    },
+                    "description": {
+                      "type": "string",
+                      "description": "An optional description for the prompt"
+                    },
+                    "messages": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": ["content", "role"],
+                        "properties": {
+                          "content": {
+                            "oneOf": [
+                              {
+                                "type": "object",
+                                "required": ["text", "type"],
+                                "properties": {
+                                  "annotations": {
+                                    "type": "object",
+                                    "description": "Optional annotations for the client"
+                                  },
+                                  "text": {
+                                    "type": "string",
+                                    "description": "The text content of the message"
+                                  },
+                                  "type": {
+                                    "type": "string",
+                                    "const": "text"
+                                  }
+                                }
+                              },
+                              {
+                                "type": "object",
+                                "required": ["data", "mimeType", "type"],
+                                "properties": {
+                                  "annotations": {
+                                    "type": "object",
+                                    "description": "Optional annotations for the client"
+                                  },
+                                  "data": {
+                                    "type": "string",
+                                    "format": "byte",
+                                    "description": "The base64-encoded image data"
+                                  },
+                                  "mimeType": {
+                                    "type": "string",
+                                    "description": "The MIME type of the image"
+                                  },
+                                  "type": {
+                                    "type": "string",
+                                    "const": "image"
+                                  }
+                                }
+                              },
+                              {
+                                "type": "object",
+                                "required": ["data", "mimeType", "type"],
+                                "properties": {
+                                  "annotations": {
+                                    "type": "object",
+                                    "description": "Optional annotations for the client"
+                                  },
+                                  "data": {
+                                    "type": "string",
+                                    "format": "byte",
+                                    "description": "The base64-encoded audio data"
+                                  },
+                                  "mimeType": {
+                                    "type": "string",
+                                    "description": "The MIME type of the audio"
+                                  },
+                                  "type": {
+                                    "type": "string",
+                                    "const": "audio"
+                                  }
+                                }
+                              },
+                              {
+                                "type": "object",
+                                "required": ["resource", "type"],
+                                "properties": {
+                                  "annotations": {
+                                    "type": "object",
+                                    "description": "Optional annotations for the client"
+                                  },
+                                  "resource": {
+                                    "oneOf": [
+                                      {
+                                        "type": "object",
+                                        "required": ["text", "uri"],
+                                        "properties": {
+                                          "mimeType": {
+                                            "type": "string",
+                                            "description": "The MIME type of this resource"
+                                          },
+                                          "text": {
+                                            "type": "string",
+                                            "description": "The text of the item"
+                                          },
+                                          "uri": {
+                                            "type": "string",
+                                            "format": "uri",
+                                            "description": "The URI of this resource"
+                                          }
+                                        }
+                                      },
+                                      {
+                                        "type": "object",
+                                        "required": ["blob", "uri"],
+                                        "properties": {
+                                          "blob": {
+                                            "type": "string",
+                                            "format": "byte",
+                                            "description": "Base64-encoded binary data"
+                                          },
+                                          "mimeType": {
+                                            "type": "string",
+                                            "description": "The MIME type of this resource"
+                                          },
+                                          "uri": {
+                                            "type": "string",
+                                            "format": "uri",
+                                            "description": "The URI of this resource"
+                                          }
+                                        }
+                                      }
+                                    ]
+                                  },
+                                  "type": {
+                                    "type": "string",
+                                    "const": "resource"
+                                  }
+                                }
+                              }
+                            ]
+                          },
+                          "role": {
+                            "type": "string",
+                            "enum": ["assistant", "user"],
+                            "description": "The sender or recipient of messages and data in a conversation"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/tools/list": {
+      "post": {
+        "operationId": "listTools",
+        "summary": "List tools the server has",
+        "description": "Sent from the client to request a list of tools the server has",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["method"],
+                "properties": {
+                  "method": {
+                    "type": "string",
+                    "const": "tools/list"
+                  },
+                  "params": {
+                    "type": "object",
+                    "properties": {
+                      "cursor": {
+                        "type": "string",
+                        "description": "An opaque token representing the current pagination position"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "List of tools",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["tools"],
+                  "properties": {
+                    "_meta": {
+                      "type": "object",
+                      "additionalProperties": true
+                    },
+                    "nextCursor": {
+                      "type": "string",
+                      "description": "An opaque token representing the pagination position after the last returned result"
+                    },
+                    "tools": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": ["inputSchema", "name"],
+                        "properties": {
+                          "annotations": {
+                            "type": "object",
+                            "description": "Additional properties describing a Tool to clients",
+                            "properties": {
+                              "destructiveHint": {
+                                "type": "boolean",
+                                "description": "If true, the tool may perform destructive updates to its environment"
+                              },
+                              "idempotentHint": {
+                                "type": "boolean",
+                                "description": "If true, calling the tool repeatedly with the same arguments will have no additional effect"
+                              },
+                              "openWorldHint": {
+                                "type": "boolean",
+                                "description": "If true, this tool may interact with an \"open world\" of external entities"
+                              },
+                              "readOnlyHint": {
+                                "type": "boolean",
+                                "description": "If true, the tool does not modify its environment"
+                              },
+                              "title": {
+                                "type": "string",
+                                "description": "A human-readable title for the tool"
+                              }
+                            }
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "A human-readable description of the tool"
+                          },
+                          "inputSchema": {
+                            "type": "object",
+                            "required": ["type"],
+                            "properties": {
+                              "properties": {
+                                "type": "object",
+                                "additionalProperties": {
+                                  "type": "object",
+                                  "additionalProperties": true
+                                }
+                              },
+                              "required": {
+                                "type": "array",
+                                "items": {
+                                  "type": "string"
+                                }
+                              },
+                              "type": {
+                                "type": "string",
+                                "const": "object"
+                              }
+                            }
+                          },
+                          "name": {
+                            "type": "string",
+                            "description": "The name of the tool"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/tools/call": {
+      "post": {
+        "operationId": "callTool",
+        "summary": "Call a tool",
+        "description": "Used by the client to invoke a tool provided by the server",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["method", "params"],
+                "properties": {
+                  "method": {
+                    "type": "string",
+                    "const": "tools/call"
+                  },
+                  "params": {
+                    "type": "object",
+                    "required": ["name"],
+                    "properties": {
+                      "arguments": {
+                        "type": "object",
+                        "additionalProperties": true
+                      },
+                      "name": {
+                        "type": "string",
+                        "description": "The name of the tool to call"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Tool call result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["content"],
+                  "properties": {
+                    "_meta": {
+                      "type": "object",
+                      "additionalProperties": true
+                    },
+                    "content": {
+                      "type": "array",
+                      "items": {
+                        "oneOf": [
+                          {
+                            "type": "object",
+                            "required": ["text", "type"],
+                            "properties": {
+                              "annotations": {
+                                "type": "object",
+                                "description": "Optional annotations for the client"
+                              },
+                              "text": {
+                                "type": "string",
+                                "description": "The text content of the message"
+                              },
+                              "type": {
+                                "type": "string",
+                                "const": "text"
+                              }
+                            }
+                          },
+                          {
+                            "type": "object",
+                            "required": ["data", "mimeType", "type"],
+                            "properties": {
+                              "annotations": {
+                                "type": "object",
+                                "description": "Optional annotations for the client"
+                              },
+                              "data": {
+                                "type": "string",
+                                "format": "byte",
+                                "description": "The base64-encoded image data"
+                              },
+                              "mimeType": {
+                                "type": "string",
+                                "description": "The MIME type of the image"
+                              },
+                              "type": {
+                                "type": "string",
+                                "const": "image"
+                              }
+                            }
+                          },
+                          {
+                            "type": "object",
+                            "required": ["data", "mimeType", "type"],
+                            "properties": {
+                              "annotations": {
+                                "type": "object",
+                                "description": "Optional annotations for the client"
+                              },
+                              "data": {
+                                "type": "string",
+                                "format": "byte",
+                                "description": "The base64-encoded audio data"
+                              },
+                              "mimeType": {
+                                "type": "string",
+                                "description": "The MIME type of the audio"
+                              },
+                              "type": {
+                                "type": "string",
+                                "const": "audio"
+                              }
+                            }
+                          },
+                          {
+                            "type": "object",
+                            "required": ["resource", "type"],
+                            "properties": {
+                              "annotations": {
+                                "type": "object",
+                                "description": "Optional annotations for the client"
+                              },
+                              "resource": {
+                                "oneOf": [
+                                  {
+                                    "type": "object",
+                                    "required": ["text", "uri"],
+                                    "properties": {
+                                      "mimeType": {
+                                        "type": "string",
+                                        "description": "The MIME type of this resource"
+                                      },
+                                      "text": {
+                                        "type": "string",
+                                        "description": "The text of the item"
+                                      },
+                                      "uri": {
+                                        "type": "string",
+                                        "format": "uri",
+                                        "description": "The URI of this resource"
+                                      }
+                                    }
+                                  },
+                                  {
+                                    "type": "object",
+                                    "required": ["blob", "uri"],
+                                    "properties": {
+                                      "blob": {
+                                        "type": "string",
+                                        "format": "byte",
+                                        "description": "Base64-encoded binary data"
+                                      },
+                                      "mimeType": {
+                                        "type": "string",
+                                        "description": "The MIME type of this resource"
+                                      },
+                                      "uri": {
+                                        "type": "string",
+                                        "format": "uri",
+                                        "description": "The URI of this resource"
+                                      }
+                                    }
+                                  }
+                                ]
+                              },
+                              "type": {
+                                "type": "string",
+                                "const": "resource"
+                              }
+                            }
+                          }
+                        ]
+                      }
+                    },
+                    "isError": {
+                      "type": "boolean",
+                      "description": "Whether the tool call ended in an error"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/logging/setLevel": {
+      "post": {
+        "operationId": "setLoggingLevel",
+        "summary": "Set the logging level",
+        "description": "A request from the client to the server, to enable or adjust logging",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["method", "params"],
+                "properties": {
+                  "method": {
+                    "type": "string",
+                    "const": "logging/setLevel"
+                  },
+                  "params": {
+                    "type": "object",
+                    "required": ["level"],
+                    "properties": {
+                      "level": {
+                        "type": "string",
+                        "enum": [
+                          "alert",
+                          "critical",
+                          "debug",
+                          "emergency",
+                          "error",
+                          "info",
+                          "notice",
+                          "warning"
+                        ],
+                        "description": "The level of logging that the client wants to receive from the server"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Empty response indicating the logging level was set",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "_meta": {
+                      "type": "object",
+                      "additionalProperties": true
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/completion/complete": {
+      "post": {
+        "operationId": "complete",
+        "summary": "Get completion suggestions",
+        "description": "A request from the client to the server, to ask for completion options",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["method", "params"],
+                "properties": {
+                  "method": {
+                    "type": "string",
+                    "const": "completion/complete"
+                  },
+                  "params": {
+                    "type": "object",
+                    "required": ["argument", "ref"],
+                    "properties": {
+                      "argument": {
+                        "type": "object",
+                        "required": ["name", "value"],
+                        "properties": {
+                          "name": {
+                            "type": "string",
+                            "description": "The name of the argument"
+                          },
+                          "value": {
+                            "type": "string",
+                            "description": "The value of the argument to use for completion matching"
+                          }
+                        }
+                      },
+                      "ref": {
+                        "oneOf": [
+                          {
+                            "type": "object",
+                            "required": ["name", "type"],
+                            "properties": {
+                              "name": {
+                                "type": "string",
+                                "description": "The name of the prompt or prompt template"
+                              },
+                              "type": {
+                                "type": "string",
+                                "const": "ref/prompt"
+                              }
+                            }
+                          },
+                          {
+                            "type": "object",
+                            "required": ["type", "uri"],
+                            "properties": {
+                              "type": {
+                                "type": "string",
+                                "const": "ref/resource"
+                              },
+                              "uri": {
+                                "type": "string",
+                                "format": "uri-template",
+                                "description": "The URI or URI template of the resource"
+                              }
+                            }
+                          }
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Completion results",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["completion"],
+                  "properties": {
+                    "_meta": {
+                      "type": "object",
+                      "additionalProperties": true
+                    },
+                    "completion": {
+                      "type": "object",
+                      "required": ["values"],
+                      "properties": {
+                        "hasMore": {
+                          "type": "boolean",
+                          "description": "Indicates whether there are additional completion options beyond those provided"
+                        },
+                        "total": {
+                          "type": "integer",
+                          "description": "The total number of completion options available"
+                        },
+                        "values": {
+                          "type": "array",
+                          "description": "An array of completion values",
+                          "items": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/sampling/createMessage": {
+      "post": {
+        "operationId": "createMessage",
+        "summary": "Request to sample an LLM via the client",
+        "description": "A request from the server to sample an LLM via the client",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["method", "params"],
+                "properties": {
+                  "method": {
+                    "type": "string",
+                    "const": "sampling/createMessage"
+                  },
+                  "params": {
+                    "type": "object",
+                    "required": ["maxTokens", "messages"],
+                    "properties": {
+                      "includeContext": {
+                        "type": "string",
+                        "enum": ["allServers", "none", "thisServer"],
+                        "description": "A request to include context from one or more MCP servers"
+                      },
+                      "maxTokens": {
+                        "type": "integer",
+                        "description": "The maximum number of tokens to sample"
+                      },
+                      "messages": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "required": ["content", "role"],
+                          "properties": {
+                            "content": {
+                              "oneOf": [
+                                {
+                                  "type": "object",
+                                  "required": ["text", "type"],
+                                  "properties": {
+                                    "annotations": {
+                                      "type": "object",
+                                      "description": "Optional annotations for the client"
+                                    },
+                                    "text": {
+                                      "type": "string",
+                                      "description": "The text content of the message"
+                                    },
+                                    "type": {
+                                      "type": "string",
+                                      "const": "text"
+                                    }
+                                  }
+                                },
+                                {
+                                  "type": "object",
+                                  "required": ["data", "mimeType", "type"],
+                                  "properties": {
+                                    "annotations": {
+                                      "type": "object",
+                                      "description": "Optional annotations for the client"
+                                    },
+                                    "data": {
+                                      "type": "string",
+                                      "format": "byte",
+                                      "description": "The base64-encoded image data"
+                                    },
+                                    "mimeType": {
+                                      "type": "string",
+                                      "description": "The MIME type of the image"
+                                    },
+                                    "type": {
+                                      "type": "string",
+                                      "const": "image"
+                                    }
+                                  }
+                                },
+                                {
+                                  "type": "object",
+                                  "required": ["data", "mimeType", "type"],
+                                  "properties": {
+                                    "annotations": {
+                                      "type": "object",
+                                      "description": "Optional annotations for the client"
+                                    },
+                                    "data": {
+                                      "type": "string",
+                                      "format": "byte",
+                                      "description": "The base64-encoded audio data"
+                                    },
+                                    "mimeType": {
+                                      "type": "string",
+                                      "description": "The MIME type of the audio"
+                                    },
+                                    "type": {
+                                      "type": "string",
+                                      "const": "audio"
+                                    }
+                                  }
+                                }
+                              ]
+                            },
+                            "role": {
+                              "type": "string",
+                              "enum": ["assistant", "user"],
+                              "description": "The sender or recipient of messages and data in a conversation"
+                            }
+                          }
+                        }
+                      },
+                      "metadata": {
+                        "type": "object",
+                        "description": "Optional metadata to pass through to the LLM provider",
+                        "additionalProperties": true
+                      },
+                      "modelPreferences": {
+                        "type": "object",
+                        "description": "The server's preferences for which model to select",
+                        "properties": {
+                          "costPriority": {
+                            "type": "number",
+                            "minimum": 0,
+                            "maximum": 1,
+                            "description": "How much to prioritize cost when selecting a model"
+                          },
+                          "hints": {
+                            "type": "array",
+                            "description": "Optional hints to use for model selection",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "name": {
+                                  "type": "string",
+                                  "description": "A hint for a model name"
+                                }
+                              }
+                            }
+                          },
+                          "intelligencePriority": {
+                            "type": "number",
+                            "minimum": 0,
+                            "maximum": 1,
+                            "description": "How much to prioritize intelligence and capabilities when selecting a model"
+                          },
+                          "speedPriority": {
+                            "type": "number",
+                            "minimum": 0,
+                            "maximum": 1,
+                            "description": "How much to prioritize sampling speed (latency) when selecting a model"
+                          }
+                        }
+                      },
+                      "stopSequences": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      },
+                      "systemPrompt": {
+                        "type": "string",
+                        "description": "An optional system prompt the server wants to use for sampling"
+                      },
+                      "temperature": {
+                        "type": "number"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Sampled message from the LLM",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["content", "model", "role"],
+                  "properties": {
+                    "_meta": {
+                      "type": "object",
+                      "additionalProperties": true
+                    },
+                    "content": {
+                      "oneOf": [
+                        {
+                          "type": "object",
+                          "required": ["text", "type"],
+                          "properties": {
+                            "annotations": {
+                              "type": "object",
+                              "description": "Optional annotations for the client"
+                            },
+                            "text": {
+                              "type": "string",
+                              "description": "The text content of the message"
+                            },
+                            "type": {
+                              "type": "string",
+                              "const": "text"
+                            }
+                          }
+                        },
+                        {
+                          "type": "object",
+                          "required": ["data", "mimeType", "type"],
+                          "properties": {
+                            "annotations": {
+                              "type": "object",
+                              "description": "Optional annotations for the client"
+                            },
+                            "data": {
+                              "type": "string",
+                              "format": "byte",
+                              "description": "The base64-encoded image data"
+                            },
+                            "mimeType": {
+                              "type": "string",
+                              "description": "The MIME type of the image"
+                            },
+                            "type": {
+                              "type": "string",
+                              "const": "image"
+                            }
+                          }
+                        },
+                        {
+                          "type": "object",
+                          "required": ["data", "mimeType", "type"],
+                          "properties": {
+                            "annotations": {
+                              "type": "object",
+                              "description": "Optional annotations for the client"
+                            },
+                            "data": {
+                              "type": "string",
+                              "format": "byte",
+                              "description": "The base64-encoded audio data"
+                            },
+                            "mimeType": {
+                              "type": "string",
+                              "description": "The MIME type of the audio"
+                            },
+                            "type": {
+                              "type": "string",
+                              "const": "audio"
+                            }
+                          }
+                        }
+                      ]
+                    },
+                    "model": {
+                      "type": "string",
+                      "description": "The name of the model that generated the message"
+                    },
+                    "role": {
+                      "type": "string",
+                      "enum": ["assistant", "user"],
+                      "description": "The sender or recipient of messages and data in a conversation"
+                    },
+                    "stopReason": {
+                      "type": "string",
+                      "description": "The reason why sampling stopped, if known"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/roots/list": {
+      "post": {
+        "operationId": "listRoots",
+        "summary": "List root URIs from the client",
+        "description": "Sent from the server to request a list of root URIs from the client",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["method"],
+                "properties": {
+                  "method": {
+                    "type": "string",
+                    "const": "roots/list"
+                  },
+                  "params": {
+                    "type": "object",
+                    "properties": {
+                      "_meta": {
+                        "type": "object",
+                        "properties": {
+                          "progressToken": {
+                            "type": ["string", "integer"],
+                            "description": "Token for requesting progress notifications"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "List of roots",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["roots"],
+                  "properties": {
+                    "_meta": {
+                      "type": "object",
+                      "additionalProperties": true
+                    },
+                    "roots": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": ["uri"],
+                        "properties": {
+                          "name": {
+                            "type": "string",
+                            "description": "An optional name for the root"
+                          },
+                          "uri": {
+                            "type": "string",
+                            "format": "uri",
+                            "description": "The URI identifying the root"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "JSONRPCError": {
+        "type": "object",
+        "required": ["error", "id", "jsonrpc"],
+        "properties": {
+          "error": {
+            "type": "object",
+            "required": ["code", "message"],
+            "properties": {
+              "code": {
+                "type": "integer",
+                "description": "The error type that occurred"
+              },
+              "data": {
+                "description": "Additional information about the error"
+              },
+              "message": {
+                "type": "string",
+                "description": "A short description of the error"
+              }
+            }
+          },
+          "id": {
+            "type": ["string", "integer"],
+            "description": "A uniquely identifying ID for a request in JSON-RPC"
+          },
+          "jsonrpc": {
+            "type": "string",
+            "const": "2.0"
+          }
+        }
+      }
+    },
+    "securitySchemes": {}
+  },
+  "webhooks": {
+    "notifications_initialized": {
+      "post": {
+        "operationId": "initializedNotification",
+        "summary": "Notification that initialization has finished",
+        "description": "This notification is sent from the client to the server after initialization has finished",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["method"],
+                "properties": {
+                  "method": {
+                    "type": "string",
+                    "const": "notifications/initialized"
+                  },
+                  "params": {
+                    "type": "object",
+                    "properties": {
+                      "_meta": {
+                        "type": "object",
+                        "additionalProperties": true
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Acknowledgment of the notification",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "notifications_cancelled": {
+      "post": {
+        "operationId": "cancelledNotification",
+        "summary": "Notification that a request has been cancelled",
+        "description": "This notification can be sent by either side to indicate that it is cancelling a previously-issued request",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["method", "params"],
+                "properties": {
+                  "method": {
+                    "type": "string",
+                    "const": "notifications/cancelled"
+                  },
+                  "params": {
+                    "type": "object",
+                    "required": ["requestId"],
+                    "properties": {
+                      "reason": {
+                        "type": "string",
+                        "description": "An optional string describing the reason for the cancellation"
+                      },
+                      "requestId": {
+                        "type": ["string", "integer"],
+                        "description": "The ID of the request to cancel"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Acknowledgment of the notification",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "notifications_progress": {
+      "post": {
+        "operationId": "progressNotification",
+        "summary": "Notification of progress on a long-running request",
+        "description": "An out-of-band notification used to inform the receiver of a progress update for a long-running request",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["method", "params"],
+                "properties": {
+                  "method": {
+                    "type": "string",
+                    "const": "notifications/progress"
+                  },
+                  "params": {
+                    "type": "object",
+                    "required": ["progress", "progressToken"],
+                    "properties": {
+                      "message": {
+                        "type": "string",
+                        "description": "An optional message describing the current progress"
+                      },
+                      "progress": {
+                        "type": "number",
+                        "description": "The progress thus far"
+                      },
+                      "progressToken": {
+                        "type": ["string", "integer"],
+                        "description": "The progress token which was given in the initial request"
+                      },
+                      "total": {
+                        "type": "number",
+                        "description": "Total number of items to process, if known"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Acknowledgment of the notification",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "notifications_resources_list_changed": {
+      "post": {
+        "operationId": "resourceListChangedNotification",
+        "summary": "Notification that the resource list has changed",
+        "description": "An optional notification from the server to the client, informing it that the list of resources it can read from has changed",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["method"],
+                "properties": {
+                  "method": {
+                    "type": "string",
+                    "const": "notifications/resources/list_changed"
+                  },
+                  "params": {
+                    "type": "object",
+                    "properties": {
+                      "_meta": {
+                        "type": "object",
+                        "additionalProperties": true
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Acknowledgment of the notification",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "notifications_resources_updated": {
+      "post": {
+        "operationId": "resourceUpdatedNotification",
+        "summary": "Notification that a resource has changed",
+        "description": "A notification from the server to the client, informing it that a resource has changed and may need to be read again",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["method", "params"],
+                "properties": {
+                  "method": {
+                    "type": "string",
+                    "const": "notifications/resources/updated"
+                  },
+                  "params": {
+                    "type": "object",
+                    "required": ["uri"],
+                    "properties": {
+                      "uri": {
+                        "type": "string",
+                        "format": "uri",
+                        "description": "The URI of the resource that has been updated"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Acknowledgment of the notification",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "notifications_prompts_list_changed": {
+      "post": {
+        "operationId": "promptListChangedNotification",
+        "summary": "Notification that the prompt list has changed",
+        "description": "An optional notification from the server to the client, informing it that the list of prompts it offers has changed",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["method"],
+                "properties": {
+                  "method": {
+                    "type": "string",
+                    "const": "notifications/prompts/list_changed"
+                  },
+                  "params": {
+                    "type": "object",
+                    "properties": {
+                      "_meta": {
+                        "type": "object",
+                        "additionalProperties": true
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Acknowledgment of the notification",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "notifications_tools_list_changed": {
+      "post": {
+        "operationId": "toolListChangedNotification",
+        "summary": "Notification that the tool list has changed",
+        "description": "An optional notification from the server to the client, informing it that the list of tools it offers has changed",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["method"],
+                "properties": {
+                  "method": {
+                    "type": "string",
+                    "const": "notifications/tools/list_changed"
+                  },
+                  "params": {
+                    "type": "object",
+                    "properties": {
+                      "_meta": {
+                        "type": "object",
+                        "additionalProperties": true
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Acknowledgment of the notification",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "notifications_message": {
+      "post": {
+        "operationId": "loggingMessageNotification",
+        "summary": "Notification of a log message",
+        "description": "Notification of a log message passed from server to client",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["method", "params"],
+                "properties": {
+                  "method": {
+                    "type": "string",
+                    "const": "notifications/message"
+                  },
+                  "params": {
+                    "type": "object",
+                    "required": ["data", "level"],
+                    "properties": {
+                      "data": {
+                        "description": "The data to be logged, such as a string message or an object"
+                      },
+                      "level": {
+                        "type": "string",
+                        "enum": [
+                          "alert",
+                          "critical",
+                          "debug",
+                          "emergency",
+                          "error",
+                          "info",
+                          "notice",
+                          "warning"
+                        ],
+                        "description": "The severity of this log message"
+                      },
+                      "logger": {
+                        "type": "string",
+                        "description": "An optional name of the logger issuing this message"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Acknowledgment of the notification",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "notifications_roots_list_changed": {
+      "post": {
+        "operationId": "rootsListChangedNotification",
+        "summary": "Notification that the roots list has changed",
+        "description": "A notification from the client to the server, informing it that the list of roots has changed",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["method"],
+                "properties": {
+                  "method": {
+                    "type": "string",
+                    "const": "notifications/roots/list_changed"
+                  },
+                  "params": {
+                    "type": "object",
+                    "properties": {
+                      "_meta": {
+                        "type": "object",
+                        "additionalProperties": true
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Acknowledgment of the notification",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
